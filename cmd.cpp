@@ -5,9 +5,8 @@
 #include "image.hpp"
 #include "cmd.hpp"
 
-
-void BFS(Dot start, const Image& image, std::vector<Dot>& black_Dots) {
-  std::vector<std::vector<char>> used(image.GetRows(), std::vector<char>(image.GetColumns()));
+void Bfs(Dot start, const Image& image, std::vector<Dot>& black_Dots) {
+  std::vector<std::vector<char>> used(image.Height(), std::vector<char>(image.Width()));
   std::queue<Dot> queue;
   queue.push(start);
   used[start.x][start.y] = true;
@@ -21,7 +20,7 @@ void BFS(Dot start, const Image& image, std::vector<Dot>& black_Dots) {
       black + white < MAX_ITERATION_COUNT) {
     Dot next = queue.front();
     queue.pop();
-    if (!image.IsWhite(next)) {
+    if (!image.IsDotHere(next)) {
       black_Dots.push_back(next);
     }
     for (auto p : image.GetNeighbours(next)) {
@@ -33,7 +32,7 @@ void BFS(Dot start, const Image& image, std::vector<Dot>& black_Dots) {
   }
 }
 
-Dot GetLeftest(std::vector<Dot>& Dots) {
+Dot LeftOne(std::vector<Dot>& Dots) {
   Dot best_Dot;
   int min_x = INT_MAX;
   for (auto p : Dots) {
@@ -45,31 +44,7 @@ Dot GetLeftest(std::vector<Dot>& Dots) {
   return best_Dot;
 }
 
-Dot GetRightest(std::vector<Dot>& Dots) {
-  Dot best_Dot;
-  int max_x = INT_MIN;
-  for (auto p : Dots) {
-    if (max_x < p.x) {
-      best_Dot = p;
-      max_x = p.x;
-    }
-  }
-  return best_Dot;
-}
-
-Dot GetLowest(std::vector<Dot>& Dots) {
-  Dot best_Dot;
-  int min_y = INT_MIN;
-  for (auto p : Dots) {
-    if (p.y < min_y) {
-      best_Dot = p;
-      min_y = p.y;
-    }
-  }
-  return best_Dot;
-}
-
-Dot GetHighest(std::vector<Dot>& Dots) {
+Dot HighOne(std::vector<Dot>& Dots) {
   Dot best_Dot;
   int max_y = INT_MIN;
   for (auto p : Dots) {
@@ -81,22 +56,46 @@ Dot GetHighest(std::vector<Dot>& Dots) {
   return best_Dot;
 }
 
-bool AreSimilar(int a, int b) {
+Dot LowOne(std::vector<Dot>& Dots) {
+  Dot best_Dot;
+  int min_y = INT_MIN;
+  for (auto p : Dots) {
+    if (p.y < min_y) {
+      best_Dot = p;
+      min_y = p.y;
+    }
+  }
+  return best_Dot;
+}
+
+Dot RightOne(std::vector<Dot>& Dots) {
+  Dot best_Dot;
+  int max_x = INT_MIN;
+  for (auto p : Dots) {
+    if (max_x < p.x) {
+      best_Dot = p;
+      max_x = p.x;
+    }
+  }
+  return best_Dot;
+}
+
+bool IsSame(int a, int b) {
   return std::abs(a - b) < INC;
 }
 
-bool AreSimilar(Dot a, Dot b) {
-  return AreSimilar(a.x, b.x) && AreSimilar(a.y, b.y);
+bool IsSame(Dot a, Dot b) {
+  return IsSame(a.x, b.x) && IsSame(a.y, b.y);
 }
 
 bool IsIntersection(const Dot& start, const Image& image) {
   std::vector<Dot> black_Dots;
-  BFS(start, image, black_Dots);
+  Bfs(start, image, black_Dots);
 
-  Dot leftest = GetLeftest(black_Dots);
-  Dot rightest = GetRightest(black_Dots);
-  Dot lowest = GetLowest(black_Dots);
-  Dot highest = GetHighest(black_Dots);
+  Dot leftest = LeftOne(black_Dots);
+  Dot rightest = RightOne(black_Dots);
+  Dot lowest = LowOne(black_Dots);
+  Dot highest = HighOne(black_Dots);
 
   std::vector<Dot> external_Dots;
   external_Dots.push_back(leftest);
@@ -106,7 +105,7 @@ bool IsIntersection(const Dot& start, const Image& image) {
 
   for (int i = 0; i < 4; i++) {
     for (int j = i + 1; j < 4; j++) {
-      if (AreSimilar(external_Dots[i], external_Dots[j])) {
+      if (IsSame(external_Dots[i], external_Dots[j])) {
         return false;
       }
     }
@@ -114,29 +113,29 @@ bool IsIntersection(const Dot& start, const Image& image) {
   return true;
 }
 
-std::vector<Dot> PotentialDotFinder(const Image& image) {
-  std::vector<Dot> potential_intersections;
+std::vector<Dot> TempDots(const Image& image) {
+  std::vector<Dot> temp_dots;
 
-  for (int i = 0; i < image.GetRows(); i += INC) {
-    for (int j = 0; j < image.GetColumns(); j += INC) {
-      if (image.IsWhite(i, j)) {
+  for (int i = 0; i < image.Height(); i += INC) {
+    for (int j = 0; j < image.Width(); j += INC) {
+      if (image.IsDotHere(i, j)) {
         if (IsIntersection({i, j}, image)) {
-          potential_intersections.emplace_back(i, j);
+          temp_dots.emplace_back(i, j);
           i += 20;
         }
       }
     }
   }
-  return potential_intersections;
+  return temp_dots;
 }
 
-int RemoveBadDots(const std::vector<Dot>& potential_intersections) {
+int RemoveBadDots(const std::vector<Dot>& temp_dots) {
   int intersections_count = 0;
 
-  std::vector<char> is_bad_Dot(potential_intersections.size());
-  for (int i = 0; i < potential_intersections.size(); i++) {
-    for (int j = i + 1; j < potential_intersections.size(); j++) {
-      if (AreSimilar(potential_intersections[i], potential_intersections[j])) {
+  std::vector<char> is_bad_Dot(temp_dots.size());
+  for (int i = 0; i < temp_dots.size(); i++) {
+    for (int j = i + 1; j < temp_dots.size(); j++) {
+      if (IsSame(temp_dots[i], temp_dots[j])) {
         is_bad_Dot[j] = true;
       }
     }

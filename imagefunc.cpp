@@ -14,28 +14,28 @@ bool Dot::operator!=(const Dot& other) const {
   return !(*this == other);
 }
 
-size_t Image::GetRows() const {
-  return is_white_.size();
+size_t Image::Width() const {
+  return is_white_[0].size();
 }
 
-size_t Image::GetColumns() const {
-  return is_white_[0].size();
+size_t Image::Height() const {
+  return is_white_.size();
 }
 
 std::vector<Dot> Image::GetNeighbours(Dot Dot) const {
   return GetNeighbours(Dot.x, Dot.y);
 }
 
-bool Image::IsWhite(int x, int y) const {
+bool Image::IsDotHere(const uchar& color) const{
+  return color == 0;
+}
+
+bool Image::IsDotHere(int x, int y) const {
   return is_white_[x][y];
 }
 
-bool Image::IsWhite(const Dot& Dot) const {
-  return IsWhite(Dot.x, Dot.y);
-}
-
-bool Image::IsWhite(const uchar& color) const{
-  return color == 0;
+bool Image::IsDotHere(const Dot& Dot) const {
+  return IsDotHere(Dot.x, Dot.y);
 }
 
 bool Image::IsCorrect(int x, int y) const {
@@ -47,7 +47,7 @@ Image::Image(cv::Mat image) : is_white_(image.rows, std::vector<uchar>(image.col
   for (int i = 0; i < image.rows; i++) {
     for (int j = 0; j < image.cols; j++) {
       uchar color = image.at<uchar>(i, j);
-      is_white_[i][j] = IsWhite(color);
+      is_white_[i][j] = IsDotHere(color);
     }
   }
 }
