@@ -23,23 +23,22 @@ struct Dot {
   bool operator!=(const Dot& other) const;
 };
 
-
 class Image {
  public:
   explicit Image(cv::Mat image);
 
-  size_t GetRows() const;
-  size_t GetColumns() const;
+  size_t Height() const;
+  size_t Width() const;
 
   std::vector<Dot> GetNeighbours(Dot Dot) const;
   std::vector<Dot> GetNeighbours(int x, int y) const;
 
-  bool IsWhite(int x, int y) const;
+  bool IsDotHere(int x, int y) const;
 
-  bool IsWhite(const Dot& Dot) const;
+  bool IsDotHere(const Dot& Dot) const;
 
  private:
-  bool IsWhite(const uchar& color) const;
+  bool IsDotHere(const uchar& color) const;
 
   bool IsCorrect(int x, int y) const;
 

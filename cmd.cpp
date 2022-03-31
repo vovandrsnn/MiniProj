@@ -148,6 +148,3 @@ int RemoveBadDots(const std::vector<Dot>& temp_dots) {
   }
   return intersections_count;
 }
-
-
-
